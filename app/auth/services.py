@@ -1,14 +1,8 @@
 from app.auth.schemas import UserRole, UserStatus
+from database import FAKE_USERS_DB
 import secrets
 
-FAKE_USERS_DB: list[dict] = [
-    {
-        "id":1,
-        "username": "admin",
-        "password": "admin123",
-        "role": UserRole.ADMIN,
-        "status": UserStatus.ACTIVE
-    }]
+
 def register_user(username: str):
     if any(user["username"] == username for user in FAKE_USERS_DB):
            raise ValueError("Username already taken")
