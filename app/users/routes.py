@@ -1,8 +1,14 @@
-from fastapi import APIRouter, HTTPException, status
-from app.users.schemas import UserOut, PatchPasswordRequest, PatchStatusRequest
+from fastapi import APIRouter, HTTPException, status, Query
+from app.users.schemas import UserOut, PatchPasswordRequest, PatchStatusRequest, GetUsersQuery
+from app.shared.schemas import PaginatedResponse
 from app.users import services
+from typing import Annotated
 
 userRoutes = APIRouter(prefix="/users")
+
+@userRoutes.get("", response_model=PaginatedResponse[UserOut])
+def getAllUsers(query: Annotated[GetUsersQuery, Query()]):
+    return services.getAllUsers(query.limit, query.offset)
 
 @userRoutes.patch("/{id}/password", response_model=UserOut)
 def modifyPassword(id:int, payload: PatchPasswordRequest):

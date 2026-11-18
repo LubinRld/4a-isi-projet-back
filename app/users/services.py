@@ -1,6 +1,17 @@
 from app.database import FAKE_USERS_DB
 from app.users.schemas import UserStatus
 
+def getAllUsers(limit: int = 20, offset: int =0):
+    users = FAKE_USERS_DB
+    total = len(FAKE_USERS_DB)
+    paginated_users = users[offset: offset+limit]
+    return {
+        "total":total,
+        "limit": limit,
+        "offset": offset,
+        "data": paginated_users
+    }
+    
 def modifyUserPassword(userId: int, oldPassword:str, newPassword: str):
     user = next((user for user in FAKE_USERS_DB if user["id"]==userId), None)
     if user is None:

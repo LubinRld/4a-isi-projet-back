@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field
 from enum import Enum
+from app.shared.schemas import PaginationQuery
 
+class GetUsersQuery(PaginationQuery):
+    pass
 
 class UserStatus(str, Enum):
     ACTIVE = "active"
