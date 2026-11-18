@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from app.auth import services
-from app.auth.schemas import (LoginRequest, RegisterRequest, RegisterResponse, UserOut)
+from app.auth.schemas import (LoginRequest, RegisterRequest, RegisterResponse)
+from app.users.schemas import UserOut
 
 authRoutes = APIRouter(prefix="/auth")
 
