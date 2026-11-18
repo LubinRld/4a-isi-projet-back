@@ -1,5 +1,5 @@
-from app.auth.schemas import UserRole, UserStatus
-from database import FAKE_USERS_DB
+from app.users.schemas import UserRole, UserStatus
+from app.database import FAKE_USERS_DB
 import secrets
 
 

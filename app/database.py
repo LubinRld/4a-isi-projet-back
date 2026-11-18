@@ -1,4 +1,4 @@
-from auth.schemas import UserStatus, UserRole
+from app.users.schemas import UserRole, UserStatus
 
 FAKE_USERS_DB: list[dict] = [
     {
