@@ -10,7 +10,7 @@ from sqlmodel import Session, create_engine
 
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "database.db"
-SQL_DIR = BASE_DIR / "sql"
+SQL_DIR = BASE_DIR.parent / "db"
 
 def init_db():
     """Creates the database from the .sql files if it does not exist yet."""
