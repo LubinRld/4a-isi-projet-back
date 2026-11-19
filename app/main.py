@@ -1,3 +1,4 @@
+import app.database
 from fastapi import FastAPI
 from app.auth.routes import authRoutes
 from app.users.routes import userRoutes
