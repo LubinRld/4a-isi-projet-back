@@ -1,33 +1,28 @@
-from app.users.schemas import UserRole, UserStatus
-from app.database import FAKE_USERS_DB
+from app.users.schemas import UserStatus
+from sqlmodel import Session, select
+from app.models import User
 import secrets
 
 
-def register_user(username: str):
-    if any(user["username"] == username for user in FAKE_USERS_DB):
-           raise ValueError("Username already taken")
+def register_user(session: Session, name: str):
+    existing = session.exec(select(User).where(User.name == name)).first()
+    if existing:
+      raise ValueError("name already taken")
 
     password = secrets.token_urlsafe(8)
 
-    new_user={"id": len(FAKE_USERS_DB)+1,
-              "username": username,
-              "password": password,
-              "role": UserRole.USER,
-              "status": UserStatus.ACTIVE
-              }
+    newUser=User(name= name, password=password)
 
-    FAKE_USERS_DB.append(new_user)
+    session.add(newUser)
+    session.commit()
+    session.refresh(newUser)
 
-    return {
-          "id": new_user["id"],
-          "username": new_user["username"],
-          "password": password
-    }
+    return newUser
 
-def authenticate_user(username: str, password: str):
-      user = next((user for user in FAKE_USERS_DB if user["username"] == username), None)
-      if not user or user["password"] != password:
-            raise ValueError("Invalid username or password")
-      if user["status"]==UserStatus.BLOCKED:
+def authenticate_user(session: Session, name: str, password: str):
+      user = session.exec(select(User).where(User.name==name)).first()
+      if not user or user.password != password:
+            raise ValueError("Invalid name or password")
+      if user.status==UserStatus.BLOCKED:
             raise PermissionError("User account is blocked")
       return user

@@ -15,7 +15,7 @@ class UserRole(str, Enum):
 
 class UserOut(BaseModel):
     id: int
-    username: str
+    name: str
     role: UserRole
     status: UserStatus
 
