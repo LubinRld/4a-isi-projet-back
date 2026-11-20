@@ -27,8 +27,8 @@ class Menu(SQLModel, table=True):
     name: str
     is_available: bool = True
     is_deleted: bool = False
-    starting_date: NaiveDatetime
-    ending_date: NaiveDatetime
+    starting_date: NaiveDatetime | None = None
+    ending_date: NaiveDatetime | None = None
     price_cents: int
 
 
