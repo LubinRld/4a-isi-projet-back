@@ -1,6 +1,6 @@
 """Connection to the SQLite database via SQLModel.
-If the database file does not exist, it is created at startup by running
-all the .sql files in the sql/ folder, in alphabetical order
+At startup, the .sql files of the db folder are executed in alphabetical order,
+except those already listed in the tracking file (executed_sql.txt)
 """
 
 import sqlite3
@@ -11,24 +11,37 @@ from sqlmodel import Session, create_engine
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "database.db"
 SQL_DIR = BASE_DIR.parent / "db"
+TRACK_PATH = BASE_DIR / "executed_sql.txt"
 
 def init_db():
-    """Creates the database from the .sql files if it does not exist yet."""
-    if DB_PATH.exists():
-        return
-
+    """Executes the .sql files that are not in the tracking file yet."""
     files = sorted(SQL_DIR.glob("*.sql"))   #sort by file name order
     if not files:
         raise FileNotFoundError(f"No .sql file found in {SQL_DIR}")
 
+    is_new = not DB_PATH.exists()
+    if is_new:
+        TRACK_PATH.unlink(missing_ok=True)
+
+    executed = set()
+    if TRACK_PATH.exists():
+        lines = TRACK_PATH.read_text(encoding="utf-8").splitlines()
+        executed = {line.strip() for line in lines if line.strip()}
+
     conn = sqlite3.connect(DB_PATH)
     try:
         for file in files:
+            if file.name in executed:
+                continue
             conn.executescript(file.read_text(encoding="utf-8"))
+            with open(TRACK_PATH, "a", encoding="utf-8") as track:
+                track.write(file.name + "\n")
     except Exception:
         conn.close()
-        DB_PATH.unlink(missing_ok=True)        #to avoid leaving a half-created database
-        raise
+        if is_new:
+            DB_PATH.unlink(missing_ok=True)      #to avoid leaving a half-created database
+            TRACK_PATH.unlink(missing_ok=True)
+        raise                                    #an existing database is never deleted
     conn.close()
 
 
