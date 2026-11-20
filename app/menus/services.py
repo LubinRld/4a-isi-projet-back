@@ -1,4 +1,4 @@
-from sqlmodel import Session, select, delete
+from sqlmodel import Session, select, delete, update
 from app.models import Menu, MenuProduct, Product
 from app.menus.schemas import MenuProductOut, MenuOut, MenuProductItem, CreateMenuRequest, UpdateMenuRequest
 
@@ -143,3 +143,49 @@ def updateMenu(session: Session, menuId: int, payload: UpdateMenuRequest):
         products = _getMenuProducts(session, menuId)
 
     return _buildMenuOut(menu, products)
+
+def softDeleteMenu(session: Session, menuId: int):
+    menu = session.get(Menu, menuId)
+    if menu is None or menu.is_deleted:
+        raise LookupError("Menu not found")
+
+    menu.is_deleted = True
+    menu.is_available = False
+    session.add(menu)
+    session.commit()
+
+def restoreMenu(session: Session, menuId: int):
+    menu = session.get(Menu, menuId)
+    if menu is None :
+        raise LookupError("Menu not found")
+
+    if not menu.is_deleted:
+        raise ValueError("Menu is not deleted")
+
+    deletedProduct = session.exec(
+        select(Product.id)
+        .join(MenuProduct, MenuProduct.product_id == Product.id)
+        .where(MenuProduct.menu_id == menuId, Product.is_deleted == True)
+    ).first()
+
+    if deletedProduct is not None: 
+        raise ValueError("Cannot restore menu because one or more of its products are deleted")
+
+    menu.is_deleted = False
+    session.add(menu)
+    session.commit()
+    session.refresh(menu)
+    return _buildMenuOut(menu, _getMenuProducts(session, menuId))
+
+def disableMenusContainingProduct(session: Session, productId:int, available_stock: int | None = None):
+    conditions = [MenuProduct.product_id == productId]
+
+    if available_stock is not None:
+        conditions.append(MenuProduct.quantity > available_stock)
+
+    menuIdsSubquery = select(MenuProduct.menu_id).where(*conditions)
+
+    session.exec(update(Menu)
+                 .where(Menu.id.in_(menuIdsSubquery), Menu.is_available==True)
+                 .values(is_available=False)
+            )

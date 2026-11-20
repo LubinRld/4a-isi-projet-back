@@ -26,3 +26,19 @@ def patchMenu(session: Annotated[Session, Depends(get_session)], menu_id:int, pa
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except LookupError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+@menuRoutes.delete("/{menu_id}", response_model=None, status_code=status.HTTP_204_NO_CONTENT)
+def deleteMenu(session: Annotated[Session, Depends(get_session)], menu_id: int):
+    try:
+        services.softDeleteMenu(session, menu_id)
+    except LookupError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+@menuRoutes.patch("/{menu_id}/restore", response_model=MenuOut, status_code=status.HTTP_200_OK)
+def restoreMenu(session: Annotated[Session, Depends(get_session)], menu_id:int):
+    try:
+        return services.restoreMenu(session, menu_id)
+    except LookupError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
