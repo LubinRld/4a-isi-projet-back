@@ -51,7 +51,7 @@ class OrderQuery(PaginationQuery):
 
 class CreateOrderRequest(BaseModel):
     retrieval_date: datetime 
-    user_id : int
+    user_id : int | None = None
     products: list[MenuProductItem] = Field(default_factory=list)
     menus: list[MenuOrderItem] = Field(default_factory=list) 
 

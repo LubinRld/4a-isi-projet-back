@@ -4,6 +4,7 @@ from app.orders.schemas import ProductOrderOut, MenuOrderOut, MenuProductOut, Or
 from app.shared.schemas import PaginatedResponse
 from app.users.schemas import UserStatus
 from app.menus.services import disableMenusContainingProduct
+from app.users.schemas import UserRole
 from datetime import datetime
 
 def getOrderById(session: Session, orderId: int):
@@ -82,14 +83,18 @@ def getOrderById(session: Session, orderId: int):
         menus=menusOut
     )
 
-def getAllOrders(session:Session, limit:int =20, offset:int = 0):
-    orderRows = session.exec(select(Order, User)
-                             .join(User, Order.user_id == User.id)
-                             .limit(limit)
-                             .offset(offset)
-                             ).all()
-    
-    total = session.exec(select(func.count()).select_from(Order)).one()
+def getAllOrders(session:Session, limit:int =20, offset:int = 0, userId: int |None = None):
+
+    statement = select(Order, User).join(User, Order.user_id == User.id)
+    countStatement = select(func.count()).select_from(Order)
+
+    if userId is not None:
+        statement = statement.where(Order.user_id == userId)
+        countStatement = countStatement.where(Order.user_id == userId)
+
+    orderRows = session.exec(statement.limit(limit).offset(offset)).all()
+    total = session.exec(countStatement).one()
+
     ordersOut = [
         OrderOut(
             id = order.id,
@@ -108,9 +113,9 @@ def getAllOrders(session:Session, limit:int =20, offset:int = 0):
         data=ordersOut
     )
 
-def createOrder(session: Session, payload: CreateOrderRequest):
+def createOrder(session: Session, payload: CreateOrderRequest, userId: int):
 
-    user = session.get(User, payload.user_id)
+    user = session.get(User, userId)
     if user is None:
         raise LookupError("User not found")
     if user.status != UserStatus.ACTIVE:
@@ -178,7 +183,7 @@ def createOrder(session: Session, payload: CreateOrderRequest):
             productsByIds[product.id]=product
 
     newOrder = Order(
-        user_id=payload.user_id,
+        user_id=userId,
         retrieval_date=retrievalDate
     )
 
@@ -220,12 +225,20 @@ ALLOWED_STATUS_TRAINSITION: dict[OrderStatus, set[OrderStatus]] = {
     OrderStatus.CANCELLED: set()
 }
 
-def updateOrderStatus(session: Session, orderId:int, status: OrderStatus):
+def updateOrderStatus(session: Session, orderId:int, status: OrderStatus, currentUser: User):
     order = session.get(Order, orderId)
     if order is None:
         raise LookupError("Order not found")
 
     currentStatus = OrderStatus(order.status)
+
+    if currentUser.role != UserRole.ADMIN.value:
+        if order.user_id != currentUser.id:
+            raise PermissionError("You can only modify your own orders")
+        if status != OrderStatus.CANCELLED:
+            raise PermissionError("Users can only cancel their orders")
+        if currentStatus != OrderStatus.PENDING:
+            raise ValueError("You can only cancel a pending order")
 
     if currentStatus == status:
         raise ValueError(f"Order is already '{status.value}'")
