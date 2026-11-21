@@ -1,4 +1,5 @@
 from sqlmodel import Session, select, func
+from app.menus.services import disableMenusContainingProduct
 from app.models import Product
 
 def getAllProducts(session: Session,limit: int = 20, offset: int = 0):
@@ -56,6 +57,7 @@ def patchProduct(session: Session, productId: int, name: str | None = None, pric
         if product.stock+stock_change <0:
             raise ValueError("Insufficient stock")
         product.stock += stock_change
+        disableMenusContainingProduct(session, productId, product.stock)
 
     session.add(product)
     session.commit()
@@ -69,6 +71,7 @@ def softDeleteProduct(session: Session, productId: int):
         raise LookupError("Product not found")
 
     product.is_deleted = True
+    disableMenusContainingProduct(session, productId)
     session.add(product)
     session.commit()
 
