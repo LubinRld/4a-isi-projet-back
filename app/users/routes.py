@@ -10,11 +10,10 @@ from app.auth.dependencies import getCurrentUser, requireAdmin
 
 userRoutes = APIRouter(prefix="/users")
 
-@userRoutes.get("", response_model=PaginatedResponse[UserOut], status_code=status.HTTP_200_OK)
+@userRoutes.get("", response_model=PaginatedResponse[UserOut], status_code=status.HTTP_200_OK, dependencies=[Depends(requireAdmin)])
 def getAllUsers(
     session: Annotated[Session, Depends(get_session)], 
-    query: Annotated[GetUsersQuery, Query()],
-    admin: Annotated[User, Depends(requireAdmin)]):
+    query: Annotated[GetUsersQuery, Query()]):
     return services.getAllUsers(session, query.limit, query.offset)
 
 @userRoutes.patch("/{user_id}/password", response_model=UserOut, status_code=status.HTTP_200_OK)
