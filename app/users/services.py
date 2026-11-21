@@ -1,6 +1,7 @@
 from sqlmodel import Session, select, func
 from app.users.schemas import UserStatus
 from app.models import User
+from app.auth.security import hashPassword, verifyPassword
 
 def getAllUsers(session: Session, limit: int = 20, offset: int =0):
     getAllUsersStatement = select(User).limit(limit).offset(offset)
@@ -20,12 +21,12 @@ def modifyUserPassword(session: Session, userId: int, oldPassword:str, newPasswo
         raise LookupError("User not found")
     if user.status==UserStatus.BLOCKED:
         raise PermissionError("User account is blocked")
-    if user.password!=oldPassword:
+    if not verifyPassword(oldPassword, user.password):
         raise ValueError("Invalid old password")
-    if user.password == newPassword:
+    if oldPassword == newPassword:
         raise ValueError("New password must be different from old password")
 
-    user.password = newPassword
+    user.password = hashPassword(newPassword)
     session.add(user)
     session.commit()
     session.refresh(user)

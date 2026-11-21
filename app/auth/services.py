@@ -1,7 +1,8 @@
 from app.users.schemas import UserStatus
 from sqlmodel import Session, select
 from app.models import User
-from app.auth.security import createAccessToken
+from app.auth.security import createAccessToken, hashPassword, verifyPassword
+from app.auth.schemas import RegisterResponse
 import secrets
 
 
@@ -10,14 +11,15 @@ def register_user(session: Session, name: str):
     if existing:
       raise ValueError("name already taken")
 
-    password = secrets.token_urlsafe(8)
-    newUser=User(name= name, password=password)
+    plainPassword = secrets.token_urlsafe(8)
+    newUser=User(name= name, password=hashPassword(plainPassword))
 
     session.add(newUser)
     session.commit()
     session.refresh(newUser)
 
-    return newUser
+    return RegisterResponse(id=newUser.id, name=newUser.name, password=plainPassword)
+
 
 def authenticate_user(session: Session, name: str, password: str):
       user = session.exec(select(User).where(User.name==name)).first()

@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 from app.database import engine
 from app.models import User
 from app.users.schemas import UserRole, UserStatus
+from app.auth.security import hashPassword
 
 
 def createAdmin(session: Session, name: str, password: str) -> User:
@@ -25,7 +26,7 @@ def createAdmin(session: Session, name: str, password: str) -> User:
         name=cleanName,
         role=UserRole.ADMIN.value,
         status=UserStatus.ACTIVE.value,
-        password=password,
+        password=hashPassword(password),
     )
 
     session.add(adminUser)
