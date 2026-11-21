@@ -1,5 +1,6 @@
 import app.database
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.auth.routes import authRoutes
 from app.users.routes import userRoutes
 from app.products.routes import productRoutes
@@ -8,6 +9,8 @@ from app.menus.routes import menuRoutes
 from app.orders.routes import orderRoutes
 
 app = FastAPI()
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 
 app.include_router(authRoutes)
 app.include_router(userRoutes)
