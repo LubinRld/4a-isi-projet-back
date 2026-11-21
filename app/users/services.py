@@ -31,7 +31,9 @@ def modifyUserPassword(session: Session, userId: int, oldPassword:str, newPasswo
     session.refresh(user)
     return user
 
-def modifyUserStatus(session: Session, userId: int, status: UserStatus):
+def modifyUserStatus(session: Session, userId: int, status: UserStatus, adminId: int):
+    if userId == adminId:
+        raise PermissionError("Admin cannot change their own account status")
     user = session.get(User, userId)
 
     if user is None: 

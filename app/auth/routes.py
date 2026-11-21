@@ -3,8 +3,7 @@ from typing import Annotated
 from sqlmodel import Session
 from app.database import get_session
 from app.auth import services
-from app.auth.schemas import (LoginRequest, RegisterRequest, RegisterResponse)
-from app.users.schemas import UserOut
+from app.auth.schemas import LoginRequest, RegisterRequest, RegisterResponse, TokenResponse
 
 authRoutes = APIRouter(prefix="/auth")
 
@@ -15,7 +14,7 @@ def register(session : Annotated[Session, Depends(get_session)], payload: Regist
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-@authRoutes.post("/login", response_model=UserOut)
+@authRoutes.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 def login(session: Annotated[Session, Depends(get_session)], payload: LoginRequest):
     try:
         return services.authenticate_user(session, payload.name, payload.password)

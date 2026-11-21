@@ -11,6 +11,7 @@ class MenuOut(BaseModel):
     name: str
     price_cents: int
     is_available:bool
+    is_deleted: bool
     starting_date: datetime | None
     ending_date: datetime | None
     products: list[MenuProductOut]
