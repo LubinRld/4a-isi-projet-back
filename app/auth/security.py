@@ -1,10 +1,19 @@
 from datetime import datetime, timedelta, timezone
 import os
 import jwt
+from pwdlib import PasswordHash
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "ChangeThisKeyInProductionBeforeStarting")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
+
+passwordHash = PasswordHash.recommended()
+
+def hashPassword(plainPassword:str):
+    return passwordHash.hash(plainPassword)
+
+def verifyPassword(plainPassword:str, hashedPassword: str):
+    return passwordHash.verify(plainPassword, hashedPassword)
 
 def createAccessToken(userId:int, role:str):
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
