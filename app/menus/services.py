@@ -8,6 +8,7 @@ def _buildMenuOut(menu:Menu, products: list[MenuProductOut]):
         name=menu.name,
         price_cents=menu.price_cents,
         is_available=menu.is_available,
+        is_deleted=menu.is_deleted,
         starting_date=menu.starting_date,
         ending_date=menu.ending_date,
         products=products
